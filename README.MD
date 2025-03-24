@@ -73,24 +73,3 @@ buffer.push('first');
 buffer.push('stop');
 buffer.push('ignored'); // This value won't be processed since the buffer is closed after "stop".
 ```
-
-
-### API
-
-API
-
-new AsyncIterableBuffer<T>()
-
-Creates a new instance of the asynchronous buffer.
-
-Methods
-- **push(value: T): void**
-  Pushes a new value into the buffer. Throws an error if the buffer has been ended.
-- **end(): void**
-  Marks the buffer as completed and resolves any pending requests with { done: true }.
-- **next(): Promise<IteratorResult<T>>**
-  Returns a promise that resolves to the next buffered value. If the buffer is empty but not ended, it waits until a value is pushed.
-- **return(): Promise<IteratorResult<T>>**
-  Ends the buffer and returns a result indicating that the iterator is done. This is useful for early termination of iteration.
-- **[Symbol.asyncIterator](): AsyncIterableIterator<T>**
-  Returns the async iterator itself, enabling for await...of loops.
