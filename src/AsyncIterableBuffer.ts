@@ -2,13 +2,21 @@ export class AsyncIterableBuffer<T> implements AsyncIterableIterator<T, void> {
 
 	#dataBuffer: T[] = [];
 	#pendingRequestResolverQueue: Array<(result: IteratorYieldResult<T> | IteratorReturnResult<any>) => void> = [];
-	#done = false;
+	#closed = false;
+
+	get closed() {
+		return this.#closed;
+	}
+
+	get length() {
+		return this.#dataBuffer.length;
+	}
 
 	/**
 	 * Push a new value into the buffer. Throws an error if the buffer has been ended.
 	 */
 	push(value: T) {
-		if (this.#done)
+		if (this.#closed)
 			throw new Error('Iterable buffer is already closed');
 
 		if (this.#pendingRequestResolverQueue.length) {
@@ -24,7 +32,7 @@ export class AsyncIterableBuffer<T> implements AsyncIterableIterator<T, void> {
 	 * Mark the buffer as completed and resolve any pending requests with { done: true }.
 	 */
 	end() {
-		this.#done = true;
+		this.#closed = true;
 		while (this.#pendingRequestResolverQueue.length) {
 			const resolve = this.#pendingRequestResolverQueue.splice(0, 1)[0];
 			resolve({ done: true, value: undefined });
@@ -41,7 +49,7 @@ export class AsyncIterableBuffer<T> implements AsyncIterableIterator<T, void> {
 			return { done: false, value };
 		}
 
-		if (this.#done)
+		if (this.#closed)
 			return { done: true, value: undefined };
 
 		return new Promise(resolve => {
