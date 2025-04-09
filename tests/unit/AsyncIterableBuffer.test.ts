@@ -157,6 +157,41 @@ describe('AsyncIterableBuffer', () => {
 		});
 	});
 
+	describe('end()', () => {
+
+		it('prevents push() after end() is called', () => {
+			const buffer = new AsyncIterableBuffer<number>();
+			buffer.end();
+			expect(() => buffer.push(42)).toThrow('Iterable buffer is already closed');
+		});
+
+		it('allows next() to be called after end()', async () => {
+			const buffer = new AsyncIterableBuffer<number>();
+			buffer.push(1);
+			buffer.push(2);
+			buffer.end();
+
+			const result = await buffer.next();
+			expect(result).toEqual({ done: false, value: 1 });
+			const result2 = await buffer.next();
+			expect(result2).toEqual({ done: false, value: 2 });
+			const result3 = await buffer.next();
+			expect(result3).toEqual({ done: true, value: undefined });
+		});
+
+		it('resolves pending next() promises when end() is called', async () => {
+			const buffer = new AsyncIterableBuffer<string>();
+			const nextPromise = buffer.next();
+			const nextPromise2 = buffer.next();
+			buffer.push('hello');
+			buffer.end();
+			const result = await nextPromise;
+			expect(result).toEqual({ done: false, value: 'hello' });
+			const result2 = await nextPromise2;
+			expect(result2).toEqual({ done: true, value: undefined });
+		});
+	});
+
 	describe('[Symbol.asyncIterator]()', () => {
 
 		it('returns the instance itself', () => {
